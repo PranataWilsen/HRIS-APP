@@ -36,9 +36,7 @@ class DepartmentController extends BaseController
     public function storeAjax()
     {
         if ($this->request->isAJAX()) {
-            $rules = [
-                'name' => 'required|min_length[3]',
-            ];
+            $rules = ['name' => 'required|min_length[3]'];
 
             if (! $this->validate($rules)) {
                 return $this->response->setJSON([
@@ -58,7 +56,6 @@ class DepartmentController extends BaseController
             ]);
         }
 
-        // fallback jika bukan AJAX
         return redirect()->to('/departemen');
     }
 
@@ -77,9 +74,7 @@ class DepartmentController extends BaseController
     public function updateAjax($id)
     {
         if ($this->request->isAJAX()) {
-            $rules = [
-                'name' => 'required|min_length[3]',
-            ];
+            $rules = ['name' => 'required|min_length[3]'];
 
             if (! $this->validate($rules)) {
                 return $this->response->setJSON([
@@ -99,7 +94,6 @@ class DepartmentController extends BaseController
             ]);
         }
 
-        // fallback jika bukan AJAX
         return redirect()->to('/departemen');
     }
 
@@ -109,31 +103,22 @@ class DepartmentController extends BaseController
     public function deleteAjax($id)
     {
         if ($this->request->isAJAX()) {
-            // cek apakah data ada
-            $departemen = $this->departmentModel->find($id);
-            if (! $departemen) {
+            $data = $this->departmentModel->find($id);
+            if (! $data) {
                 return $this->response->setJSON([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => 'Departemen tidak ditemukan'
                 ]);
             }
 
-            try {
-                $this->departmentModel->delete($id);
+            $this->departmentModel->delete($id);
 
-                return $this->response->setJSON([
-                    'status'  => 'success',
-                    'message' => 'Departemen berhasil dihapus'
-                ]);
-            } catch (\Exception $e) {
-                return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => 'Gagal menghapus departemen: ' . $e->getMessage()
-                ]);
-            }
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Departemen berhasil dihapus'
+            ]);
         }
 
-        // fallback jika bukan AJAX
         return redirect()->to('/departemen');
     }
 }

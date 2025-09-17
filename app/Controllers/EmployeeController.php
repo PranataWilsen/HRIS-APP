@@ -27,9 +27,9 @@ class EmployeeController extends BaseController
         $data['pegawai'] = $this->employeeModel
             ->select('pegawai.*, departemen.name as departemen')
             ->join('departemen', 'departemen.id = pegawai.departemenid')
+            ->orderBy('pegawai.id', 'ASC') 
             ->findAll();
 
-        // mapping id -> nama keahlian
         $keahlian = $this->keahlianModel->findAll();
         $data['keahlianMap'] = array_column($keahlian, 'name', 'id');
 
@@ -75,7 +75,7 @@ class EmployeeController extends BaseController
                 'departemenid' => $this->request->getPost('departemenid'),
                 'address'      => $this->request->getPost('address'),
                 'keahlian'     => $keahlianStr,
-                'active'       => 1,
+                'active'       => 1, // default aktif
             ]);
 
             return $this->response->setJSON([
@@ -140,16 +140,30 @@ class EmployeeController extends BaseController
     }
 
     // ==========================
-    // Delete (AJAX)
+    // Toggle Active (AJAX)
     // ==========================
-    public function deleteAjax($id)
+    public function toggleActive($id)
     {
         if ($this->request->isAJAX()) {
-            $this->employeeModel->delete($id);
+            $pegawai = $this->employeeModel->find($id);
+            if (! $pegawai) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Pegawai tidak ditemukan',
+                ]);
+            }
+
+            $newStatus = $pegawai['active'] ? 0 : 1;
+
+            $this->employeeModel->update($id, [
+                'active' => $newStatus,
+            ]);
 
             return $this->response->setJSON([
                 'status'  => 'success',
-                'message' => 'Pegawai berhasil dihapus',
+                'message' => $newStatus 
+                    ? 'Pegawai berhasil diaktifkan'
+                    : 'Pegawai berhasil dinonaktifkan',
             ]);
         }
 

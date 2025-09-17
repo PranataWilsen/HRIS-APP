@@ -6,46 +6,60 @@
     <h4 class="mb-0">Tambah Keahlian</h4>
   </div>
   <div class="card-body">
-    <form id="formKeahlian" action="/keahlian/storeAjax" method="post">
+    <form id="formKeahlianCreate" action="/keahlian/storeAjax" method="post">
+        <?= csrf_field() ?> <!-- ✅ wajib -->
+
         <div class="mb-3">
             <label class="form-label">Nama Keahlian</label>
-            <input type="text" name="name" class="form-control">
+            <input type="text" name="name" class="form-control" required>
         </div>
+
         <button class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
         <a href="/keahlian" class="btn btn-secondary">Kembali</a>
     </form>
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
 <script>
 $(function(){
-  $('#formKeahlian').submit(function(e){
+  $('#formKeahlianCreate').submit(function(e){
     e.preventDefault();
+
+    // reset error lama
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').remove();
+
     $.ajax({
       url: $(this).attr('action'),
       method: 'POST',
       data: $(this).serialize(),
       dataType: 'json',
       success: function(res){
+        console.log(res); // debug
+
         if(res.status === 'success'){
           Swal.fire('Berhasil', res.message, 'success').then(() => {
             window.location.href = '/keahlian';
           });
-        } else {
-          $('.is-invalid').removeClass('is-invalid');
-          $('.invalid-feedback').remove();
+        } else if(res.errors){
           $.each(res.errors, function(field, msg){
-            $('[name="'+field+'"]').addClass('is-invalid')
-              .after('<div class="invalid-feedback">'+msg+'</div>');
+            const el = $('[name="'+field+'"]');
+            el.addClass('is-invalid');
+            el.after('<div class="invalid-feedback">'+msg+'</div>');
           });
+        } else {
+          Swal.fire('Gagal', res.message || 'Terjadi kesalahan', 'error');
         }
       },
-      error: function(){
-        Swal.fire('Oops!', 'Terjadi kesalahan server.', 'error');
+      error: function(xhr){
+        Swal.fire('Error', 'Server error saat menyimpan data.', 'error');
+        console.error(xhr.responseText);
       }
     });
   });
 });
 </script>
-
 <?= $this->endSection() ?>

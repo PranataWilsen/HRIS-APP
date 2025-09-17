@@ -10,6 +10,8 @@
   </div>
 
   <div class="card-body">
+    <?= csrf_field() ?> <!-- ✅ simpan token di halaman -->
+
     <table class="table table-bordered table-striped">
       <thead class="table-dark">
         <tr>
@@ -19,7 +21,7 @@
           <th>Alamat</th>
           <th>Keahlian</th>
           <th>Status</th>
-          <th width="160">Aksi</th>
+          <th width="200">Aksi</th>
         </tr>
       </thead>
       <tbody>
@@ -30,12 +32,10 @@
           <td><?= esc($p['departemen']) ?></td>
           <td><?= esc($p['address']) ?></td>
           <td>
-            <?php 
-              $ids = explode(',', $p['keahlian']);
-              foreach ($ids as $id) {
-                echo "<span class='badge bg-info me-1'>".($keahlianMap[$id] ?? $id)."</span>";
-              }
-            ?>
+            <?php $ids = $p['keahlian'] ? explode(',', $p['keahlian']) : []; ?>
+            <?php foreach ($ids as $id): ?>
+              <span class="badge bg-info me-1"><?= $keahlianMap[$id] ?? $id ?></span>
+            <?php endforeach; ?>
           </td>
           <td>
             <span class="badge <?= $p['active'] ? 'bg-success':'bg-secondary' ?>">
@@ -46,8 +46,12 @@
             <a href="/pegawai/edit/<?= $p['id'] ?>" class="btn btn-sm btn-warning">
               <i class="fas fa-edit"></i> Edit
             </a>
-            <button type="button" class="btn btn-sm btn-danger btnDelete" data-id="<?= $p['id'] ?>">
-              <i class="fas fa-trash"></i> Hapus
+            <button type="button" 
+                    class="btn btn-sm <?= $p['active'] ? 'btn-danger':'btn-success' ?> btnToggle" 
+                    data-id="<?= $p['id'] ?>" 
+                    data-status="<?= $p['active'] ?>">
+              <i class="fas <?= $p['active'] ? 'fa-ban' : 'fa-check' ?>"></i>
+              <?= $p['active'] ? 'Nonaktifkan' : 'Aktifkan' ?>
             </button>
           </td>
         </tr>
@@ -57,35 +61,45 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
 <script>
-$(document).on('click', '.btnDelete', function(){
+$(document).on('click', '.btnToggle', function(){
   const id = $(this).data('id');
+  const currentStatus = $(this).data('status');
+  const csrfName = '<?= csrf_token() ?>';
+  const csrfHash = $('input[name="<?= csrf_token() ?>"]').val();
 
   Swal.fire({
-    title: 'Yakin hapus?',
-    text: "Data ini tidak bisa dikembalikan!",
+    title: currentStatus ? 'Nonaktifkan pegawai ini?' : 'Aktifkan pegawai ini?',
+    text: currentStatus 
+          ? "Pegawai akan dinonaktifkan, tapi datanya tetap tersimpan."
+          : "Pegawai akan diaktifkan kembali.",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#d33',
+    confirmButtonColor: currentStatus ? '#d33' : '#28a745',
     cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Ya, hapus!',
+    confirmButtonText: currentStatus ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan',
     cancelButtonText: 'Batal'
   }).then((result) => {
     if (result.isConfirmed) {
       $.ajax({
-        url: '/pegawai/deleteAjax/' + id,
-        method: 'DELETE',
+        url: '/pegawai/toggleActive/' + id,
+        type: 'POST',
+        data: { [csrfName]: csrfHash },
         dataType: 'json',
         success: function(res){
           if(res.status === 'success'){
-            Swal.fire('Terhapus!', res.message, 'success').then(() => {
+            Swal.fire('Berhasil!', res.message, 'success').then(() => {
               location.reload();
             });
           } else {
-            Swal.fire('Error', res.message ?? 'Gagal menghapus', 'error');
+            Swal.fire('Error', res.message ?? 'Gagal mengubah status', 'error');
           }
         },
-        error: function(){
+        error: function(xhr){
+          console.error(xhr.responseText);
           Swal.fire('Error', 'Terjadi kesalahan server', 'error');
         }
       });
@@ -93,5 +107,4 @@ $(document).on('click', '.btnDelete', function(){
   });
 });
 </script>
-
 <?= $this->endSection() ?>

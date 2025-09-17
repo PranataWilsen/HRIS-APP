@@ -30,12 +30,11 @@ class Dashboard extends BaseController
 
     public function index()
     {
-        // total
+        
         $totalPegawai = $this->employeeModel->countAllResults();
         $totalDepartemen = $this->departmentModel->countAllResults();
         $totalKeahlian = $this->keahlianModel->countAllResults();
 
-        // rata-rata nilai kuis
         $jawabanPegawai = $this->jawabanPegawaiModel->findAll();
         $totalNilai = 0;
         $totalPeserta = 0;
@@ -71,7 +70,7 @@ class Dashboard extends BaseController
         }
         $rataNilai = $totalPeserta > 0 ? round($totalNilai / $totalPeserta, 2) : 0;
 
-        // chart gender
+
         $genderData = $this->employeeModel
             ->select('gender, COUNT(*) as jml')
             ->groupBy('gender')
@@ -80,7 +79,7 @@ class Dashboard extends BaseController
         $genderLabels = array_column($genderData, 'gender');
         $genderCounts = array_column($genderData, 'jml');
 
-        // chart departemen
+
         $deptData = $this->employeeModel
             ->select('departemen.name as dept, COUNT(pegawai.id) as jml')
             ->join('departemen', 'departemen.id = pegawai.departemenid')

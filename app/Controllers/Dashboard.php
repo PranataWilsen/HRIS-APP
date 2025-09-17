@@ -20,37 +20,42 @@ class Dashboard extends BaseController
 
     public function __construct()
     {
-        $this->employeeModel = new EmployeeModel();
-        $this->departmentModel = new DepartmentModel();
-        $this->keahlianModel = new KeahlianModel();
-        $this->jawabanPegawaiModel = new JawabanPegawaiModel();
+        $this->employeeModel          = new EmployeeModel();
+        $this->departmentModel        = new DepartmentModel();
+        $this->keahlianModel          = new KeahlianModel();
+        $this->jawabanPegawaiModel    = new JawabanPegawaiModel();
         $this->detailJawabanPegawaiModel = new DetailJawabanPegawaiModel();
-        $this->answerModel = new AnswerModel();
+        $this->answerModel            = new AnswerModel();
     }
 
     public function index()
     {
-        // total data
-        $totalPegawai = $this->employeeModel->countAllResults();
+        // ==========================
+        // Total data (hanya pegawai aktif)
+        // ==========================
+        $totalPegawai    = $this->employeeModel->where('active', 1)->countAllResults();
         $totalDepartemen = $this->departmentModel->countAllResults();
-        $totalKeahlian = $this->keahlianModel->countAllResults();
+        $totalKeahlian   = $this->keahlianModel->countAllResults();
 
-        // hitung rata-rata nilai kuis
+        // ==========================
+        // Hitung rata-rata nilai kuis
+        // ==========================
         $jawabanPegawai = $this->jawabanPegawaiModel
-            ->select('jawaban_pegawai.*, pegawai.name as pegawai')
+            ->select('jawaban_pegawai.*, pegawai.name as pegawai, pegawai.active')
             ->join('pegawai', 'pegawai.id = jawaban_pegawai.pegawaiid')
+            ->where('pegawai.active', 1) 
             ->findAll();
 
-        $totalNilai = 0;
+        $totalNilai   = 0;
         $totalPeserta = 0;
-        $benar100 = [];
+        $benar100     = [];
 
         foreach ($jawabanPegawai as $jp) {
-            $details = $this->detailJawabanPegawaiModel
+            $details   = $this->detailJawabanPegawaiModel
                 ->where('jawabanpegawaiid', $jp['id'])
                 ->findAll();
 
-            $score = 0;
+            $score     = 0;
             $totalSoal = count($details);
 
             foreach ($details as $d) {
@@ -60,7 +65,7 @@ class Dashboard extends BaseController
                     ->findAll();
 
                 $correctIds = array_column($correct, 'id');
-                $userIds = explode(',', $d['answer']);
+                $userIds    = explode(',', $d['answer']);
 
                 sort($correctIds);
                 sort($userIds);
@@ -78,8 +83,8 @@ class Dashboard extends BaseController
 
             if ($totalSoal > 0 && $score == $totalSoal) {
                 $benar100[] = [
-                    'pegawai' => $jp['pegawai'],
-                    'total_soal' => $totalSoal,
+                    'pegawai'       => $jp['pegawai'],
+                    'total_soal'    => $totalSoal,
                     'jawaban_benar' => $score
                 ];
             }
@@ -87,35 +92,44 @@ class Dashboard extends BaseController
 
         $rataNilai = $totalPeserta > 0 ? round($totalNilai / $totalPeserta, 2) : 0;
 
-        // chart gender
+        // ==========================
+        // Chart Gender (hanya pegawai aktif)
+        // ==========================
         $genderData = $this->employeeModel
             ->select('gender, COUNT(*) as jml')
+            ->where('active', 1)
             ->groupBy('gender')
             ->findAll();
 
         $genderLabels = array_column($genderData, 'gender');
         $genderCounts = array_column($genderData, 'jml');
 
-        // chart departemen
+        // ==========================
+        // Chart Departemen (hanya pegawai aktif)
+        // ==========================
         $deptData = $this->employeeModel
             ->select('departemen.name as dept, COUNT(pegawai.id) as jml')
             ->join('departemen', 'departemen.id = pegawai.departemenid')
+            ->where('pegawai.active', 1)
             ->groupBy('departemenid')
             ->findAll();
 
         $deptLabels = array_column($deptData, 'dept');
         $deptCounts = array_column($deptData, 'jml');
 
+        // ==========================
+        // Return ke view
+        // ==========================
         return view('dashboard/index', [
-            'totalPegawai'     => $totalPegawai,
-            'totalDepartemen'  => $totalDepartemen,
-            'totalKeahlian'    => $totalKeahlian,
-            'rataNilai'        => $rataNilai,
-            'genderLabels'     => $genderLabels,
-            'genderCounts'     => $genderCounts,
-            'deptLabels'       => $deptLabels,
-            'deptCounts'       => $deptCounts,
-            'benar100'         => $benar100
+            'totalPegawai'    => $totalPegawai,
+            'totalDepartemen' => $totalDepartemen,
+            'totalKeahlian'   => $totalKeahlian,
+            'rataNilai'       => $rataNilai,
+            'genderLabels'    => $genderLabels,
+            'genderCounts'    => $genderCounts,
+            'deptLabels'      => $deptLabels,
+            'deptCounts'      => $deptCounts,
+            'benar100'        => $benar100
         ]);
     }
 }

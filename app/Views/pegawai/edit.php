@@ -6,7 +6,9 @@
     <h4 class="mb-0">Edit Pegawai</h4>
   </div>
   <div class="card-body">
-    <form id="formPegawai" action="/pegawai/updateAjax/<?= $pegawai['id'] ?>" method="post">
+    <form id="formPegawaiEdit" action="/pegawai/updateAjax/<?= $pegawai['id'] ?>" method="post">
+        <?= csrf_field() ?> <!-- ✅ Token wajib -->
+
         <div class="mb-3">
             <label class="form-label">Nama</label>
             <input type="text" name="name" value="<?= esc($pegawai['name']) ?>" class="form-control" required>
@@ -40,9 +42,8 @@
 
         <div class="mb-3">
             <label class="form-label">Keahlian</label><br>
-            <?php 
-            $selected = $pegawai['keahlian'] ? explode(',', $pegawai['keahlian']) : [];
-            foreach ($keahlian as $k): ?>
+            <?php $selected = $pegawai['keahlian'] ? explode(',', $pegawai['keahlian']) : []; ?>
+            <?php foreach ($keahlian as $k): ?>
                 <label class="me-3">
                     <input type="checkbox" name="keahlian[]" value="<?= $k['id'] ?>" 
                            <?= in_array($k['id'], $selected) ? 'checked' : '' ?>>
@@ -62,42 +63,35 @@
 <?= $this->section('scripts') ?>
 <script>
 $(function(){
-  $('#formPegawai').submit(function(e){
+  $('#formPegawaiEdit').submit(function(e){
     e.preventDefault();
+
+    $('.is-invalid').removeClass('is-invalid');
+    $('.invalid-feedback').remove();
 
     $.ajax({
       url: $(this).attr('action'),
-      method: 'POST',
+      type: 'POST',
       data: $(this).serialize(),
       dataType: 'json',
       success: function(res){
         if(res.status === 'success'){
-          Swal.fire({
-            icon: 'success',
-            title: 'Berhasil',
-            text: res.message ?? 'Data berhasil diupdate!'
-          }).then(() => {
+          Swal.fire('Berhasil', res.message, 'success').then(() => {
             window.location.href = '/pegawai';
           });
-        } else if(res.status === 'error'){
-          // reset error lama
-          $('.is-invalid').removeClass('is-invalid');
-          $('.invalid-feedback').remove();
-
-          // tampilkan error baru
+        } else if(res.errors){
           $.each(res.errors, function(field, msg){
             const el = $('[name="'+field+'"]');
             el.addClass('is-invalid');
             el.after('<div class="invalid-feedback">'+msg+'</div>');
           });
+        } else {
+          Swal.fire('Gagal', res.message || 'Terjadi kesalahan', 'error');
         }
       },
-      error: function(){
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops!',
-          text: 'Terjadi kesalahan saat update data.'
-        });
+      error: function(xhr){
+        Swal.fire('Error', 'Server error saat update data.', 'error');
+        console.error(xhr.responseText);
       }
     });
   });

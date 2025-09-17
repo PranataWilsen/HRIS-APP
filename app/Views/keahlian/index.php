@@ -10,6 +10,8 @@
   </div>
 
   <div class="card-body">
+    <?= csrf_field() ?> <!-- ✅ Token disimpan -->
+
     <table class="table table-bordered table-striped">
       <thead class="table-dark">
         <tr>
@@ -42,9 +44,14 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
 <script>
 $(document).on('click', '.btnDelete', function(){
   const id = $(this).data('id');
+  const csrfName = '<?= csrf_token() ?>';
+  const csrfHash = $('input[name="<?= csrf_token() ?>"]').val();
 
   Swal.fire({
     title: 'Yakin hapus?',
@@ -59,8 +66,8 @@ $(document).on('click', '.btnDelete', function(){
     if (result.isConfirmed) {
       $.ajax({
         url: '/keahlian/deleteAjax/' + id,
-        method: 'POST', // pakai POST
-        data: { _method: 'DELETE' }, // override method
+        type: 'POST', // ✅ pakai POST
+        data: { [csrfName]: csrfHash }, // ✅ kirim token
         dataType: 'json',
         success: function(res){
           if(res.status === 'success'){
@@ -80,5 +87,4 @@ $(document).on('click', '.btnDelete', function(){
   });
 });
 </script>
-
 <?= $this->endSection() ?>

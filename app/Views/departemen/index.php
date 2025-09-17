@@ -10,6 +10,8 @@
   </div>
 
   <div class="card-body">
+    <?= csrf_field() ?> <!-- ✅ Token -->
+
     <table class="table table-bordered table-striped">
       <thead class="table-dark">
         <tr>
@@ -42,9 +44,14 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
 <script>
 $(document).on('click', '.btnDelete', function(){
   const id = $(this).data('id');
+  const csrfName = '<?= csrf_token() ?>';
+  const csrfHash = $('input[name="<?= csrf_token() ?>"]').val();
 
   Swal.fire({
     title: 'Yakin hapus?',
@@ -59,7 +66,8 @@ $(document).on('click', '.btnDelete', function(){
     if (result.isConfirmed) {
       $.ajax({
         url: '/departemen/deleteAjax/' + id,
-        method: 'DELETE',
+        type: 'POST', // ✅ POST, bukan DELETE
+        data: { [csrfName]: csrfHash }, // ✅ kirim token
         dataType: 'json',
         success: function(res){
           if(res.status === 'success'){
@@ -70,7 +78,8 @@ $(document).on('click', '.btnDelete', function(){
             Swal.fire('Error', res.message ?? 'Gagal menghapus', 'error');
           }
         },
-        error: function(){
+        error: function(xhr){
+          console.error(xhr.responseText);
           Swal.fire('Error', 'Terjadi kesalahan server', 'error');
         }
       });
@@ -78,5 +87,4 @@ $(document).on('click', '.btnDelete', function(){
   });
 });
 </script>
-
 <?= $this->endSection() ?>

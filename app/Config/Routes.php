@@ -17,10 +17,10 @@ $routes->get('/', 'Dashboard::index');
 $routes->get('/pegawai', 'EmployeeController::index');
 $routes->get('/pegawai/create', 'EmployeeController::create');
 $routes->get('/pegawai/edit/(:num)', 'EmployeeController::edit/$1');
-
 $routes->post('/pegawai/storeAjax', 'EmployeeController::storeAjax');
 $routes->post('/pegawai/updateAjax/(:num)', 'EmployeeController::updateAjax/$1');
-$routes->delete('/pegawai/deleteAjax/(:num)', 'EmployeeController::deleteAjax/$1');
+$routes->post('/pegawai/toggleActive/(:num)', 'EmployeeController::toggleActive/$1');
+
 
 // ==========================
 // Departemen (AJAX CRUD)
@@ -28,10 +28,9 @@ $routes->delete('/pegawai/deleteAjax/(:num)', 'EmployeeController::deleteAjax/$1
 $routes->get('/departemen', 'DepartmentController::index');
 $routes->get('/departemen/create', 'DepartmentController::create');
 $routes->get('/departemen/edit/(:num)', 'DepartmentController::edit/$1');
-
 $routes->post('/departemen/storeAjax', 'DepartmentController::storeAjax');
 $routes->post('/departemen/updateAjax/(:num)', 'DepartmentController::updateAjax/$1');
-$routes->delete('/departemen/deleteAjax/(:num)', 'DepartmentController::deleteAjax/$1');
+$routes->post('/departemen/deleteAjax/(:num)', 'DepartmentController::deleteAjax/$1');
 
 // ==========================
 // Keahlian (AJAX CRUD)
@@ -39,10 +38,9 @@ $routes->delete('/departemen/deleteAjax/(:num)', 'DepartmentController::deleteAj
 $routes->get('/keahlian', 'KeahlianController::index');
 $routes->get('/keahlian/create', 'KeahlianController::create');
 $routes->get('/keahlian/edit/(:num)', 'KeahlianController::edit/$1');
-
 $routes->post('/keahlian/storeAjax', 'KeahlianController::storeAjax');
 $routes->post('/keahlian/updateAjax/(:num)', 'KeahlianController::updateAjax/$1');
-$routes->delete('/keahlian/deleteAjax/(:num)', 'KeahlianController::deleteAjax/$1');
+$routes->post('/keahlian/deleteAjax/(:num)', 'KeahlianController::deleteAjax/$1');
 
 // ==========================
 // Quiz
